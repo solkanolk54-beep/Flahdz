@@ -1,0 +1,6 @@
+{
+  "name": "فلاّح تيك | Fllah.dz",
+  "description": "منظومة AgriTech الوطنية للربط المباشر بين الفلاح والمشتري، التتبع الجغرافي واللوجستيات والتنبؤ بالحصاد",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
