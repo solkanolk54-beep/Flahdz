@@ -82,6 +82,34 @@ export const VoiceAssistantModal: React.FC<VoiceAssistantModalProps> = ({
         pricePerUnit: 49000,
         harvestStatus: 'حجز مسبق قبل الجني' as Crop['harvestStatus'],
       }
+    },
+    {
+      dialect: 'دارجة ساحلية (جيجل / العوانة):',
+      text: 'راني في جيجل العوانة، عندي 350 طير دجاج عرب بلدي ريفي يرعى في بساتين الزيتون، و 1800 لتر زيت زيتون جبلي بكر ممتاز، السعر 1250 دج للدجاجة و 920 دج للتر زيت جاهز للشحن.',
+      data: {
+        title: 'دجاج عرب بلدي ريفي وزيت زيتون جبلي',
+        variety: 'دجاج عرب بلدي وزيتون أشملال جبلي',
+        category: 'دواجن ومواشي' as Crop['category'],
+        wilaya: 'جيجل (Jijel)',
+        quantity: 350,
+        unit: 'طير' as Crop['unit'],
+        pricePerUnit: 1250,
+        harvestStatus: 'جاهز للشحن الفوري' as Crop['harvestStatus'],
+      }
+    },
+    {
+      dialect: 'دارجة شرقية (قسنطينة / الخروب):',
+      text: 'في قسنطينة سهول الخروب، عندي 800 قنطار قمح صلب سيميتو ممتاز نخب أول، و 60 رأس خراف وأغنام أولاد جلال مسمنة طبيعياً مع دفتر بيطري، السعر 5800 دج لقنطار القمح.',
+      data: {
+        title: 'قمح صلب ممتاز وخراف أولاد جلال',
+        variety: 'قمح صلب سيميتو وأغنام أولاد جلال',
+        category: 'حبوب وبقوليات' as Crop['category'],
+        wilaya: 'قسنطينة (Constantine)',
+        quantity: 800,
+        unit: 'قنطار' as Crop['unit'],
+        pricePerUnit: 5800,
+        harvestStatus: 'جاهز للشحن الفوري' as Crop['harvestStatus'],
+      }
     }
   ];
 

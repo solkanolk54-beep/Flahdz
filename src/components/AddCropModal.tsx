@@ -61,6 +61,8 @@ export const AddCropModal: React.FC<AddCropModalProps> = ({ onClose, onAddCrop }
         ? 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80'
         : category === 'تمور'
         ? 'https://images.unsplash.com/photo-1546548970-71785318a17b?auto=format&fit=crop&w=800&q=80'
+        : category === 'دواجن ومواشي'
+        ? 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?auto=format&fit=crop&w=800&q=80'
         : 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
       images: [],
       description: `محصول طازج عالي الجودة من حقول ${wilaya} مباشر من الفلاح دون سماسرة.`,
@@ -149,11 +151,12 @@ export const AddCropModal: React.FC<AddCropModalProps> = ({ onClose, onAddCrop }
                 onChange={(e) => setCategory(e.target.value as Crop['category'])}
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="خضروات">خضروات</option>
                 <option value="أشجار مثمرة وزيتون">أشجار مثمرة وزيتون</option>
+                <option value="دواجن ومواشي">دواجن ومواشي (دجاج عرب وأغنام)</option>
+                <option value="حبوب وبقوليات">حبوب وبقوليات (قمح صلب وعدس)</option>
+                <option value="خضروات">خضروات وثوم</option>
                 <option value="تمور">تمور</option>
                 <option value="حمضيات">حمضيات</option>
-                <option value="حبوب وبقوليات">حبوب وبقوليات</option>
               </select>
             </div>
 
@@ -167,11 +170,12 @@ export const AddCropModal: React.FC<AddCropModalProps> = ({ onClose, onAddCrop }
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value="ميلة (Mila)">ميلة (Mila)</option>
+                <option value="قسنطينة (Constantine)">قسنطينة (Constantine)</option>
+                <option value="جيجل (Jijel)">جيجل (Jijel)</option>
                 <option value="بسكرة (Biskra)">بسكرة (Biskra)</option>
                 <option value="معسكر (Mascara)">معسكر (Mascara)</option>
                 <option value="البليدة (Blida)">البليدة (Blida)</option>
                 <option value="وادي سوف (El Oued)">وادي سوف (El Oued)</option>
-                <option value="قسنطينة (Constantine)">قسنطينة (Constantine)</option>
                 <option value="مستغانم (Mostaganem)">مستغانم (Mostaganem)</option>
               </select>
             </div>
@@ -203,8 +207,11 @@ export const AddCropModal: React.FC<AddCropModalProps> = ({ onClose, onAddCrop }
               >
                 <option value="قنطار">قنطار</option>
                 <option value="طن">طن</option>
-                <option value="صندوق">صندوق</option>
                 <option value="لتر">لتر</option>
+                <option value="طير">طير (دواجن)</option>
+                <option value="رأس">رأس (أغنام)</option>
+                <option value="صندوق">صندوق</option>
+                <option value="كغ">كغ</option>
               </select>
             </div>
 

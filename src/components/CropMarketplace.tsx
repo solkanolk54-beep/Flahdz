@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { Crop, Farm, StoryReel } from '../types/agritech';
 import { 
   Sprout, 
@@ -16,7 +17,9 @@ import {
   PlayCircle,
   Truck,
   ArrowUpRight,
-  Clock
+  Clock,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 interface CropMarketplaceProps {
@@ -26,6 +29,7 @@ interface CropMarketplaceProps {
   onOpenTraceability: (farm: Farm) => void;
   onOpenStoryReel: (reel: StoryReel) => void;
   onRequestContract: (crop: Crop) => void;
+  onOpenFarmProfile?: (farm: Farm) => void;
 }
 
 export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
@@ -35,7 +39,9 @@ export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
   onOpenTraceability,
   onOpenStoryReel,
   onRequestContract,
+  onOpenFarmProfile,
 }) => {
+  const { isAccessibleMode, speakText, isSpeaking, stopSpeaking, currentlySpeakingText } = useAccessibility();
   const [selectedCategory, setSelectedCategory] = useState<string>('الكل');
   const [selectedWilaya, setSelectedWilaya] = useState<string>('الكل');
   const [harvestFilter, setHarvestFilter] = useState<'all' | 'ready' | 'preorder'>('all');
@@ -47,7 +53,8 @@ export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
     'تمور',
     'خضروات',
     'حمضيات',
-    'حبوب وبقوليات'
+    'حبوب وبقوليات',
+    'دواجن ومواشي'
   ];
 
   // Aggregate stories from all farms
@@ -181,6 +188,8 @@ export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
             >
               <option value="الكل">جميع الولايات</option>
               <option value="ميلة">ميلة (Mila)</option>
+              <option value="قسنطينة">قسنطينة (Constantine)</option>
+              <option value="جيجل">جيجل (Jijel)</option>
               <option value="بسكرة">بسكرة (Biskra)</option>
               <option value="معسكر">معسكر (Mascara)</option>
               <option value="البليدة">البليدة (Blida)</option>
@@ -295,14 +304,32 @@ export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
                   )}
 
                   {/* Wilaya & Location */}
-                  <div className="absolute bottom-2.5 right-2.5 text-white">
-                    <span className="text-[11px] font-bold bg-black/50 backdrop-blur px-2 py-0.5 rounded flex items-center gap-1 w-fit mb-1">
-                      <MapPin className="w-3 h-3 text-emerald-400" />
-                      {crop.wilaya} • {crop.commune}
-                    </span>
-                    <span className="text-xs text-stone-200">
-                      {crop.farmName}
-                    </span>
+                  <div className="absolute bottom-2.5 right-2.5 left-2.5 text-white flex items-end justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold bg-black/50 backdrop-blur px-2 py-0.5 rounded flex items-center gap-1 w-fit mb-1">
+                        <MapPin className="w-3 h-3 text-emerald-400" />
+                        {crop.wilaya} • {crop.commune}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => farm && onOpenFarmProfile?.(farm)}
+                        className="text-xs text-stone-200 hover:text-white font-bold underline-offset-2 hover:underline text-right block"
+                        title="انقر لعرض ملف المزرعة العام ومواصفات التربة والسقي"
+                      >
+                        {crop.farmName} 🏛️
+                      </button>
+                    </div>
+
+                    {farm && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenFarmProfile?.(farm)}
+                        className="bg-black/60 hover:bg-black/80 backdrop-blur text-[10px] text-emerald-300 font-bold px-2 py-1 rounded-lg border border-emerald-400/30 flex items-center gap-1 transition"
+                      >
+                        <span>ملف المزرعة</span>
+                        <ArrowUpRight className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -316,6 +343,45 @@ export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
                       الصنف: <strong className="text-stone-700">{crop.variety}</strong>
                     </p>
                   </div>
+
+                  {/* Accessible Voice Audio Read Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const isCurrentlySpeakingThis = isSpeaking && currentlySpeakingText?.includes(crop.title.substring(0, 15));
+                      if (isCurrentlySpeakingThis) {
+                        stopSpeaking();
+                      } else {
+                        const harvestInfo = crop.harvestStatus === 'حجز مسبق قبل الجني'
+                          ? `متبقي ${crop.daysToHarvest} يوم على بدء الجني`
+                          : 'المحصول جاهز للشحن الفوري';
+                        const certInfo = crop.labCertificate?.acidityLevel
+                          ? `شهادة المخبر تثبت حموضة بنسبة ${crop.labCertificate.acidityLevel}`
+                          : '';
+                        const speech = `محصول: ${crop.title}، صنف: ${crop.variety}، من ${crop.farmName} في ${crop.wilaya}. سعر المزرعة المباشر هو ${crop.pricePerUnit} دينار جزائري لكل ${crop.unit}. الكمية المتاحة: ${crop.quantityAvailable} ${crop.unit}. ${harvestInfo}. ${certInfo}.`;
+                        speakText(speech, crop.title);
+                      }
+                    }}
+                    className={`w-full py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition ${
+                      isSpeaking && currentlySpeakingText?.includes(crop.title.substring(0, 15))
+                        ? 'bg-amber-400 text-stone-950 shadow-md ring-2 ring-amber-300 animate-pulse'
+                        : isAccessibleMode
+                        ? 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 shadow-xs'
+                        : 'bg-stone-50 hover:bg-amber-50 text-stone-700 hover:text-amber-950 border border-stone-200'
+                    }`}
+                    title="استمع لتفاصيل المحصول والسعر بصوت مسموع وواضح لكبار السن"
+                  >
+                    <Volume2 className={`w-4 h-4 shrink-0 ${
+                      isSpeaking && currentlySpeakingText?.includes(crop.title.substring(0, 15))
+                        ? 'animate-bounce text-stone-950'
+                        : 'text-amber-600'
+                    }`} />
+                    <span>
+                      {isSpeaking && currentlySpeakingText?.includes(crop.title.substring(0, 15))
+                        ? 'جاري القراءة بصوت مسموع... (انقر للإيقاف)'
+                        : 'استمع لتفاصيل المحصول والسعر بصوت مسموع 🔉'}
+                    </span>
+                  </button>
 
                   {/* Pricing Comparison (Direct vs Broker) */}
                   <div className="bg-stone-50 rounded-xl p-3 border border-stone-100 flex items-center justify-between">

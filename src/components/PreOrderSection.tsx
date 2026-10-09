@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { Crop, PreOrderRequest } from '../types/agritech';
 import { 
   CalendarDays, 
@@ -11,21 +12,26 @@ import {
   Factory, 
   User, 
   CheckCircle2, 
-  Sparkles,
-  ArrowRight
+  Sparkles, 
+  ArrowRight,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 interface PreOrderSectionProps {
   crops: Crop[];
   onOpenPreOrder: (crop: Crop) => void;
   preOrderRequests: PreOrderRequest[];
+  onOpenPaymentModal: (req: PreOrderRequest) => void;
 }
 
 export const PreOrderSection: React.FC<PreOrderSectionProps> = ({
   crops,
   onOpenPreOrder,
   preOrderRequests,
+  onOpenPaymentModal,
 }) => {
+  const { isAccessibleMode, speakText, isSpeaking, stopSpeaking, currentlySpeakingText } = useAccessibility();
   const [activeFilter, setActiveFilter] = useState<'all' | 'olive' | 'dates' | 'citrus'>('all');
 
   const preOrderCrops = crops.filter(c => c.isPreOrderAllowed || c.harvestStatus === 'حجز مسبق قبل الجني');
@@ -123,6 +129,39 @@ export const PreOrderSection: React.FC<PreOrderSectionProps> = ({
                       </span>
                     </div>
 
+                    {/* Audio Reader for Pre-Order Details */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const isSpeakingThis = isSpeaking && currentlySpeakingText?.includes(crop.title.substring(0, 15));
+                        if (isSpeakingThis) {
+                          stopSpeaking();
+                        } else {
+                          const speech = `حجز مسبق لمحصول: ${crop.title}. موعد الجني التقديري هو ${crop.harvestDateEstimated}، متبقي ${crop.daysToHarvest} يوم. سعر الحجز المسبق هو ${crop.pricePerUnit} دينار جزائري لكل ${crop.unit}. تم حجز ${crop.preOrderedQuantity} ${crop.unit} بنسبة ${reservedPercent} بالمائة. المزرعة: ${crop.farmName} بولاية ${crop.wilaya}.`;
+                          speakText(speech, crop.title);
+                        }
+                      }}
+                      className={`w-full py-1.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition ${
+                        isSpeaking && currentlySpeakingText?.includes(crop.title.substring(0, 15))
+                          ? 'bg-amber-400 text-stone-950 shadow-md ring-2 ring-amber-300 animate-pulse'
+                          : isAccessibleMode
+                          ? 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 shadow-xs'
+                          : 'bg-stone-50 hover:bg-amber-50 text-stone-700 hover:text-amber-950 border border-stone-200'
+                      }`}
+                      title="استمع لتفاصيل الحجز المسبق وتاريخ الجني بصوت واضح"
+                    >
+                      <Volume2 className={`w-4 h-4 shrink-0 ${
+                        isSpeaking && currentlySpeakingText?.includes(crop.title.substring(0, 15))
+                          ? 'animate-bounce text-stone-950'
+                          : 'text-amber-600'
+                      }`} />
+                      <span>
+                        {isSpeaking && currentlySpeakingText?.includes(crop.title.substring(0, 15))
+                          ? 'جاري القراءة... (انقر للإيقاف)'
+                          : 'استمع لموعد الجني والسعر 🔉'}
+                      </span>
+                    </button>
+
                     {/* Reservation Progress Bar */}
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs text-stone-600">
@@ -197,14 +236,23 @@ export const PreOrderSection: React.FC<PreOrderSectionProps> = ({
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="text-left font-mono font-bold text-stone-700">
+              <div className="flex items-center gap-2.5">
+                <div className="text-left font-mono font-bold text-stone-700 hidden sm:block">
                   {req.offeredPricePerUnit.toLocaleString()} دج / وحدة
                 </div>
+                
                 <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   {req.status}
                 </span>
+
+                <button
+                  onClick={() => onOpenPaymentModal(req)}
+                  className="bg-amber-500 hover:bg-amber-600 text-stone-950 font-black px-3 py-1.5 rounded-xl text-[11px] shadow-xs flex items-center gap-1.5 transition active:scale-95"
+                  title="تأكيد العربون بنسبة 10% في حساب الضمان عبر البطاقة الذهبية أو CIB"
+                >
+                  <span>تأكيد العربون (Edahabia/CIB)</span>
+                </button>
               </div>
             </div>
           ))}

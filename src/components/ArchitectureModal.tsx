@@ -9,7 +9,8 @@ import {
   TrendingUp, 
   Cpu, 
   CheckCircle,
-  FileText
+  FileText,
+  Compass
 } from 'lucide-react';
 
 interface ArchitectureModalProps {
@@ -60,12 +61,12 @@ export const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ onClose })
           <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-2">
             <h4 className="font-black text-stone-900 text-sm flex items-center gap-2">
               <Database className="w-4 h-4 text-blue-700" />
-              <span>2. النظام الجغرافي والبيانات الضخمة (Node.js + PostgreSQL / PostGIS)</span>
+              <span>2. النظام الجغرافي وحساب الضمان المشفر (Node.js + Express + PostgreSQL / PostGIS)</span>
             </h4>
             <ul className="list-disc list-inside space-y-1 text-stone-600 pr-1">
               <li><strong>R-Tree Spatial Indexing:</strong> استعلامات جغرافية فائقة السرعة لتصفية المزارع بشعاع كيلومتري دقيق: "أوجد مزارع الزيتون أو التمور في نطاق 50 كم من ولاية ميلة أو بسكرة".</li>
               <li><strong>Geo-Fencing:</strong> تنبيه المشترين والمطاعم المكتتبين عند جاهزية محصول جديد للحصاد في ولايتهم.</li>
-              <li><strong>Microservices Dockerized:</strong> فصل خدمات الخرائط، اللوجستيات، وإدارة المحاصيل لمعالجة آلاف الزيارات المتزامنة.</li>
+              <li><strong>B2B Escrow Engine (PostgreSQL Transactions):</strong> إدارة دورة حياة عقود التوريد (<code className="text-emerald-700 font-mono">b2b_contracts</code> و <code className="text-emerald-700 font-mono">contract_shipments</code>) مع حجز العربون 15% وتحرير الدفعات فقط بعد استيفاء الشروط المخبرية (<code className="text-emerald-700 font-mono">acidity &le; 0.8%</code> و <code className="text-emerald-700 font-mono">pesticide_free = true</code>).</li>
             </ul>
           </div>
 
@@ -127,6 +128,33 @@ export const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ onClose })
               <div className="bg-white p-2.5 rounded-xl border border-amber-100">
                 <strong className="text-amber-900 block mb-0.5">عمولة الصفقات الكبرى</strong>
                 <span className="text-stone-600">تسهيل وتوثيق عقود التوريد السنوية بين المزارع والمطاعم/المصانع بضمان بنكي شفاف.</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 5: GTM Strategy & Pilot Regions */}
+          <div className="bg-teal-50/70 p-4 rounded-2xl border border-teal-200 space-y-2">
+            <h4 className="font-black text-teal-950 text-sm flex items-center gap-2">
+              <Compass className="w-4 h-4 text-teal-700" />
+              <span>4. خطة العمل الموصى بها للإطلاق الميداني (GTM Strategy & Pilot Hubs)</span>
+            </h4>
+            
+            <div className="space-y-2 text-stone-700 text-[11px]">
+              <div>
+                <strong className="text-teal-900 block">أ. شبكة الولايات النموذجية للإطلاق (Pilot Regions):</strong>
+                <ul className="list-disc list-inside pr-1 space-y-0.5 text-stone-600 mt-1">
+                  <li><strong>ميلة وقسنطينة:</strong> التركيز على منتجات أشجار الزيتون، زيت الزيتون البكر الممتاز، والحبوب الصلبة.</li>
+                  <li><strong>بسكرة ووادي سوف:</strong> التركيز على الحجز المسبق للتمور (دقلة نور) والمحاصيل المغطاة والبطاطا الصحراوية.</li>
+                  <li><strong>البليدة ومتيجة:</strong> التركيز على حمضيات التنعيم وعقود التوريد المباشرة لسلاسل المطاعم والمؤسسات الفندقية.</li>
+                </ul>
+              </div>
+
+              <div className="pt-1 border-t border-teal-200/60">
+                <strong className="text-teal-900 block">ب. الشراكات الميدانية المؤسساتية (Strategic MoUs):</strong>
+                <ul className="list-disc list-inside pr-1 space-y-0.5 text-stone-600 mt-1">
+                  <li><strong>المخابر الزراعية المعتمدة (INRAA / ITDAS / CACQE):</strong> توقيع مذكرات تفاهم لتبسيط إصدار شهادات التحليل الإلكترونية عبر رموز QR الرقمية في أقل من 24 ساعة.</li>
+                  <li><strong>الغرف الفلاحية الولائية (CAW):</strong> التعاون الميداني لتسجيل المزارعين، التحقق من بطاقة الفلاح، وتفعيل تنبيهات الـ SMS والذكاء الاصطناعي المباشرة.</li>
+                </ul>
               </div>
             </div>
           </div>

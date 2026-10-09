@@ -15,9 +15,10 @@ import {
 interface ContractRequestModalProps {
   crop: Crop;
   onClose: () => void;
+  onOpenOfficialAgreement?: () => void;
 }
 
-export const ContractRequestModal: React.FC<ContractRequestModalProps> = ({ crop, onClose }) => {
+export const ContractRequestModal: React.FC<ContractRequestModalProps> = ({ crop, onClose, onOpenOfficialAgreement }) => {
   const [companyName, setCompanyName] = useState<string>('');
   const [contractType, setContractType] = useState<string>('توريد موسمي حصري للمطاعم/الفنادق');
   const [monthlyVolume, setMonthlyVolume] = useState<number>(20);
@@ -80,20 +81,36 @@ export const ContractRequestModal: React.FC<ContractRequestModalProps> = ({ crop
               تم إرسال المسودة للفلاح للتوقيع المبدئي وسيتواصل ممثل المنظومة لتنسيق إيداع الضمانات اللوجستية والمالية.
             </p>
 
-            <div className="pt-2 flex items-center gap-2">
-              <button
-                onClick={() => alert('تم تحميل نسخة العقد PDF')}
-                className="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
-              >
-                <Download className="w-4 h-4" />
-                <span>تحميل العقد PDF</span>
-              </button>
-              <button
-                onClick={onClose}
-                className="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition"
-              >
-                تم والعودة للسوق
-              </button>
+            <div className="pt-2 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => alert('تم تحميل نسخة العقد PDF')}
+                  className="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>تحميل العقد PDF</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition"
+                >
+                  تم والعودة للسوق
+                </button>
+              </div>
+
+              {onOpenOfficialAgreement && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenOfficialAgreement();
+                  }}
+                  className="w-full py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+                >
+                  <FileCheck2 className="w-4 h-4 text-emerald-700" />
+                  <span>معاينة نموذج العقد السنوي الآلي المتكامل (AGRO-B2B-2026-9081)</span>
+                </button>
+              )}
             </div>
           </div>
         ) : (

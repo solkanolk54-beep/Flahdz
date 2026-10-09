@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { 
   Sprout, 
   MapPin, 
@@ -12,17 +13,26 @@ import {
   Layers, 
   ShieldCheck, 
   PhoneCall,
-  CalendarDays
+  CalendarDays,
+  Building2,
+  Sparkles,
+  Compass,
+  Volume2,
+  Settings
 } from 'lucide-react';
 
+export type NavigationTab = 'market' | 'gis' | 'preorder' | 'b2b' | 'ai-alerts' | 'gtm' | 'carriers' | 'equipment' | 'trends';
+
 interface HeaderProps {
-  activeTab: 'market' | 'gis' | 'preorder' | 'carriers' | 'equipment' | 'trends';
-  setActiveTab: (tab: 'market' | 'gis' | 'preorder' | 'carriers' | 'equipment' | 'trends') => void;
+  activeTab: NavigationTab;
+  setActiveTab: (tab: NavigationTab) => void;
   isOffline: boolean;
   setIsOffline: (val: boolean) => void;
   onOpenVoiceInput: () => void;
   onOpenAddCrop: () => void;
   pendingOfflineCount: number;
+  alertsCount?: number;
+  onOpenFarmSettings?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,7 +43,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenVoiceInput,
   onOpenAddCrop,
   pendingOfflineCount,
+  alertsCount = 3,
+  onOpenFarmSettings,
 }) => {
+  const { isAccessibleMode, toggleAccessibleMode } = useAccessibility();
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-stone-200 shadow-xs">
       {/* Top micro-bar: Algeria AgriTech Identity & Network Status */}
@@ -111,7 +124,26 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Accessibility Mode Toggle for Elderly Farmers */}
+          <button
+            onClick={toggleAccessibleMode}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-black transition border shadow-xs ${
+              isAccessibleMode
+                ? 'bg-amber-400 text-stone-950 border-amber-500 ring-2 ring-amber-300 shadow-sm'
+                : 'bg-stone-100 hover:bg-stone-200 text-stone-800 border-stone-200'
+            }`}
+            title="تفعيل وضع القراءة الميسر لكبار السن من الفلاحين (قراءة صوتية للأسعار وتكبير الخط)"
+          >
+            <Volume2 className={`w-4 h-4 ${isAccessibleMode ? 'text-stone-950 animate-bounce' : 'text-amber-600'}`} />
+            <span className="hidden sm:inline">
+              {isAccessibleMode ? 'وضع القراءة الميسر (مفعّل)' : 'وضع القراءة الميسر'}
+            </span>
+            <span className="sm:hidden">
+              {isAccessibleMode ? 'ميسر 🔊' : 'ميسر'}
+            </span>
+          </button>
+
           {/* Voice Input Simulator for elderly / busy farmers */}
           <button
             onClick={onOpenVoiceInput}
@@ -122,6 +154,19 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden sm:inline">إدخال صوتي للمحصول</span>
             <span className="sm:hidden">صوتي</span>
           </button>
+
+          {/* Farm Technical Settings Button */}
+          {onOpenFarmSettings && (
+            <button
+              onClick={onOpenFarmSettings}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 transition shadow-xs"
+              title="إعدادات الحساب الفلاحي: إدارة نوع التربة ومصادر السقي والمعايير التقنية"
+            >
+              <Settings className="w-4 h-4 text-emerald-700" />
+              <span className="hidden md:inline">إعدادات المزرعة والتربة</span>
+              <span className="md:hidden">إعدادات</span>
+            </button>
+          )}
 
           {/* Add Crop Listing */}
           <button
@@ -170,7 +215,54 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <CalendarDays className="w-4 h-4" />
-            <span>الحجز المسبق قبل الحصاد (Pre-order)</span>
+            <span>الحجز المسبق والعربون (Pre-order)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('b2b')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold transition relative ${
+              activeTab === 'b2b'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'text-stone-700 hover:bg-stone-200/70'
+            }`}
+          >
+            <Building2 className="w-4 h-4" />
+            <span>لوحة المؤسسات والعقود (B2B Dashboard)</span>
+            <span className="bg-amber-400 text-stone-900 font-black text-[10px] px-1.5 py-0.2 rounded-full">
+              جديد
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('ai-alerts')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold transition ${
+              activeTab === 'ai-alerts'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'text-stone-700 hover:bg-stone-200/70'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span>تنبيهات الذكاء الاصطناعي (AI Alerts)</span>
+            {alertsCount > 0 && (
+              <span className="bg-rose-500 text-white font-mono text-[10px] font-bold px-1.5 rounded-full">
+                {alertsCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('gtm')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold transition relative ${
+              activeTab === 'gtm'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'text-stone-700 hover:bg-stone-200/70'
+            }`}
+          >
+            <Compass className="w-4 h-4 text-emerald-400" />
+            <span>خطة الإطلاق الميداني (GTM Strategy)</span>
+            <span className="bg-emerald-300 text-emerald-950 font-black text-[10px] px-1.5 py-0.2 rounded-full">
+              3 أقطاب
+            </span>
           </button>
 
           <button

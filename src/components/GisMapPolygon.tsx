@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { Farm, Crop } from '../types/agritech';
 import { 
   MapPin, 
@@ -13,7 +14,11 @@ import {
   ShieldCheck, 
   FileText,
   Filter,
-  Sparkles
+  Sparkles,
+  Volume2,
+  Settings,
+  Droplets,
+  Sprout
 } from 'lucide-react';
 
 interface GisMapPolygonProps {
@@ -24,6 +29,8 @@ interface GisMapPolygonProps {
   onSelectFarm: (farm: Farm) => void;
   onOpenTraceability: (farm: Farm) => void;
   onOpenPreOrder: (crop: Crop) => void;
+  onOpenFarmProfile?: (farm: Farm) => void;
+  onOpenFarmSettings?: (farm: Farm) => void;
 }
 
 export const GisMapPolygon: React.FC<GisMapPolygonProps> = ({
@@ -34,7 +41,10 @@ export const GisMapPolygon: React.FC<GisMapPolygonProps> = ({
   onSelectFarm,
   onOpenTraceability,
   onOpenPreOrder,
+  onOpenFarmProfile,
+  onOpenFarmSettings,
 }) => {
+  const { isAccessibleMode, speakText, isSpeaking, stopSpeaking, currentlySpeakingText } = useAccessibility();
   const [selectedFarmId, setSelectedFarmId] = useState<string>(farms[0]?.id || 'farm-1');
   const [radiusKm, setRadiusKm] = useState<number>(50);
   const [cropTypeFilter, setCropTypeFilter] = useState<string>('all');
@@ -140,7 +150,9 @@ export const GisMapPolygon: React.FC<GisMapPolygonProps> = ({
               className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="الكل">جميع الولايات الزراعية النشطة</option>
-              <option value="ميلة">ميلة (Mila) - التلاغمة وشلغوم العيد (زيتون وثوم)</option>
+              <option value="ميلة">ميلة (Mila) - التلاغمة وشلغوم العيد (زيتون وثوم وخضار)</option>
+              <option value="قسنطينة">قسنطينة (Constantine) - الخروب وزيغود يوسف (حبوب وأغنام)</option>
+              <option value="جيجل">جيجل (Jijel) - العوانة وتاكسنة (زيتون جبلي ودجاج عرب)</option>
               <option value="بسكرة">بسكرة (Biskra) - طولقة وسيدي عقبة (دقلة نور)</option>
               <option value="معسكر">معسكر (Mascara) - سيڨ (زيتون المائدة)</option>
               <option value="البليدة">البليدة (Blida) - متيجة وبوفاريك (حمضيات)</option>
@@ -158,12 +170,15 @@ export const GisMapPolygon: React.FC<GisMapPolygonProps> = ({
               onChange={(e) => setCropTypeFilter(e.target.value)}
               className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="all">جميع المحاصيل</option>
-              <option value="زيتون">زيتون وزيت زيتون بكر</option>
+              <option value="all">جميع المحاصيل والمنتجات</option>
+              <option value="زيتون">زيتون وزيت زيتون بكر ممتاز</option>
+              <option value="دجاج">دواجن ودجاج عرب بلدي وبيض</option>
+              <option value="أغنام">أغنام وسلالات مواشي محلية</option>
+              <option value="قمح">حبوب وبقوليات (قمح صلب وعدس)</option>
+              <option value="ثوم">ثوم التلاغمة وخضروات</option>
               <option value="تمور">تمور دقلة نور ورطب</option>
               <option value="بطاطا">بطاطا صحراوية وخريفية</option>
               <option value="برتقال">حمضيات وكليمونتين</option>
-              <option value="ثوم">ثوم وخضروات جافة</option>
             </select>
           </div>
         </div>
@@ -407,6 +422,91 @@ export const GisMapPolygon: React.FC<GisMapPolygonProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Technical Agronomic Soil & Irrigation Metrics Box */}
+              <div className="bg-stone-50 p-3 rounded-xl border border-stone-200/90 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-extrabold text-stone-900 flex items-center gap-1">
+                    <Layers className="w-3.5 h-3.5 text-amber-700" />
+                    المعايير التقنية والمائية للمزرعة
+                  </span>
+                  <button
+                    onClick={() => onOpenFarmSettings?.(activeFarm)}
+                    className="text-[11px] text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-1 underline"
+                    title="تعديل المواصفات التقنية"
+                  >
+                    <Settings className="w-3 h-3" />
+                    <span>تعديل الإعدادات</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="bg-white p-2 rounded-lg border border-stone-100">
+                    <span className="text-stone-400 block text-[10px]">نوع وقوام التربة</span>
+                    <strong className="text-stone-800 font-bold block truncate" title={activeFarm.soilType || 'طميية خصبة'}>
+                      {activeFarm.soilType ? activeFarm.soilType.split('(')[0] : 'طميية خصبة'}
+                    </strong>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-stone-100">
+                    <span className="text-stone-400 block text-[10px]">حموضة التربة (pH)</span>
+                    <strong className="text-emerald-700 font-mono font-black block">
+                      {activeFarm.soilPh || 7.2} pH
+                    </strong>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-stone-100">
+                    <span className="text-stone-400 block text-[10px]">نظام السقي</span>
+                    <strong className="text-stone-800 font-bold block truncate" title={activeFarm.irrigationMethod || 'ري قطرة قطرة'}>
+                      {activeFarm.irrigationMethod ? activeFarm.irrigationMethod.split('(')[0] : 'ري قطرة قطرة'}
+                    </strong>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-stone-100">
+                    <span className="text-stone-400 block text-[10px]">ملوحة ماء الري</span>
+                    <strong className="text-cyan-700 font-mono font-black block">
+                      {activeFarm.waterSalinity !== undefined ? activeFarm.waterSalinity : 0.35} غ/لتر
+                    </strong>
+                  </div>
+                </div>
+
+                {/* View Full Public Profile Button */}
+                <button
+                  type="button"
+                  onClick={() => onOpenFarmProfile?.(activeFarm)}
+                  className="w-full py-2 px-3 rounded-lg bg-emerald-100/70 hover:bg-emerald-200/80 text-emerald-900 text-xs font-black flex items-center justify-center gap-1.5 transition border border-emerald-300"
+                >
+                  <Eye className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>عرض الملف التعريفي العام الكامل للمزرعة 🏛️</span>
+                </button>
+              </div>
+
+              {/* Accessible Farm Audio Reader Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const isSpeakingThisFarm = isSpeaking && currentlySpeakingText?.includes(activeFarm.name.substring(0, 15));
+                  if (isSpeakingThisFarm) {
+                    stopSpeaking();
+                  } else {
+                    const labInfo = activeFarm.labCertificate ? `وتحمل شهادة جودة مخبرية من ${activeFarm.labCertificate.labName}` : '';
+                    const speech = `مزرعة: ${activeFarm.name}، بإشراف المزارع: ${activeFarm.ownerName}، بولاية ${activeFarm.wilaya} بلدية ${activeFarm.commune}. المساحة الممسوحة جغرافياً: ${activeFarm.areaHectares} هكتار. مصدر مياه الري: ${activeFarm.waterSource}. ${labInfo}.`;
+                    speakText(speech, activeFarm.name);
+                  }
+                }}
+                className={`w-full py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition ${
+                  isSpeaking && currentlySpeakingText?.includes(activeFarm.name.substring(0, 15))
+                    ? 'bg-amber-400 text-stone-950 shadow-md ring-2 ring-amber-300 animate-pulse'
+                    : isAccessibleMode
+                    ? 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 shadow-xs'
+                    : 'bg-stone-50 hover:bg-amber-50 text-stone-800 border border-stone-200'
+                }`}
+                title="استمع لتفاصيل المزرعة والقطعة ومصدر الري بصوت واضح"
+              >
+                <Volume2 className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  {isSpeaking && currentlySpeakingText?.includes(activeFarm.name.substring(0, 15))
+                    ? 'جاري قراءة بيانات المزرعة... (انقر للإيقاف)'
+                    : 'استمع لتفاصيل المزرعة والقطعة 🔉'}
+                </span>
+              </button>
 
               {/* Lab Traceability Preview */}
               {activeFarm.labCertificate && (
