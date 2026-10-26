@@ -124,20 +124,90 @@ export interface Carrier {
   badge: 'ناقل موثوق' | 'لوجستيات معتمدة';
 }
 
+export interface FrigoTruckTelemetry {
+  id: string;
+  truckPlate: string; // e.g. "04891-126-19"
+  driverName: string;
+  driverPhone: string;
+  carrierCompany: string;
+  contractId: string;
+  contractNumber: string;
+  enterpriseName: string;
+  cargoTitle: string;
+  cargoWeightTons: number;
+  originWilaya: string;
+  originPoint: { name: string; lat: number; lng: number };
+  destinationWilaya: string;
+  destinationPoint: { name: string; lat: number; lng: number };
+  currentLocation: { lat: number; lng: number; locality: string };
+  headingDegrees: number;
+  speedKmH: number;
+  currentTempCelsius: number;
+  targetTempCelsius: number;
+  minAllowedTemp: number;
+  maxAllowedTemp: number;
+  humidityPercent: number;
+  coolingStatus: 'مثالية وآمنة' | 'تحذير تذبذب حراري' | 'خطر كسر سلسلة التبريد';
+  escrowStatus: 'عربون مؤمن في Escrow (HELD)' | 'محرر بعد الفحص والاستلام';
+  escrowAmountDzd: number;
+  totalDistanceKm: number;
+  coveredDistanceKm: number;
+  etaMinutes: number;
+  status: 'في الطريق' | 'قيد التحميل بالمزرعة' | 'وصلت للتفريغ والفحص المخبري' | 'متوقفة للاستراحة';
+  lastPingTime: string;
+  routeCorridor: string; // e.g. "الطريق السيار شرق-غرب (A1)"
+  gpsWaypoints: { lat: number; lng: number; label?: string }[];
+  iotSensorsStatus: {
+    compressorOn: boolean;
+    doorClosed: boolean;
+    batteryLevel: number;
+    satelliteGpsLock: boolean;
+    defrostCycle: boolean;
+  };
+}
+
+export interface CertifiedNurseryItem {
+  id: string;
+  name: string;
+  variety: 'شتلات شملال (Chemlal) نقية' | 'شتلات سيغواز (Sigoise) معتمدة' | 'شتلات قرقوري وزبوج جبلي' | 'فسائل نخيل دقلة نور مخبرية معتمدة' | 'شتلات حمضيات طومسون خالية من الفيروسات';
+  nurseryName: string;
+  ownerName: string;
+  phone: string;
+  wilaya: string;
+  commune: string;
+  coordinates: Coordinates;
+  certificateNumber: string;
+  inspectionBody: string; // e.g. "المفتشية الولائية لحماية النباتات (INPV / DSA ميلة)"
+  phytosanitaryStatus: string; // e.g. "سليمة 100% وخالية من بكتيريا Xylella fastidiosa وذبول الفيرتيسيليوم"
+  lotNumber: string;
+  ageMonths: number;
+  heightCm: number;
+  quantityAvailable: number;
+  unitPriceDzd: number;
+  qrVerifyUrl: string;
+  image: string;
+  rating: number;
+}
+
 export interface AgriculturalEquipment {
   id: string;
   title: string;
-  category: 'جرارات وحصادات' | 'معاصر زيتون' | 'ري وطاقة شمسية' | 'أسمدة ومخصبات' | 'بيوت بلاستيكية';
+  category: 'جرارات وحصادات' | 'معاصر زيتون' | 'ري وطاقة شمسية' | 'أسمدة ومخصبات' | 'بيوت بلاستيكية' | 'صهاريج مياه ومضخات';
+  equipmentType?: 'جرار Cirta سيرتا' | 'صهريج مياه مجرور' | 'مضخة غاطسة شمسية' | 'معصرة زيتون حديثة' | 'حصادة حبوب';
   dealType: 'بيع' | 'كراء موسمي' | 'شراكة';
   price: number; // بالدينار DZD
   priceUnit: 'إجمالي' | 'لليوم' | 'للهكتار' | 'للطن';
   wilaya: string;
+  commune?: string;
+  coordinates?: Coordinates;
+  distanceKm?: number;
   ownerName: string;
   ownerPhone: string;
   condition: 'جديد 0 كلم' | 'حالة ممتازة' | 'مستعمل جيد';
   image: string;
   specs: string[];
   description: string;
+  availableNow?: boolean;
 }
 
 export interface MarketPriceIndex {

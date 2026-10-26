@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { Crop, PreOrderRequest, PaymentDeposit } from '../types/agritech';
 import { 
   X, 
@@ -12,7 +13,9 @@ import {
   ArrowRight,
   Smartphone,
   Sparkles,
-  Receipt
+  Receipt,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 interface EdahabiaCibPaymentModalProps {
@@ -26,6 +29,7 @@ export const EdahabiaCibPaymentModal: React.FC<EdahabiaCibPaymentModalProps> = (
   onClose,
   onPaymentSuccess,
 }) => {
+  const { isAccessibleMode, speakText, isSpeaking, stopSpeaking, currentlySpeakingText } = useAccessibility();
   const [cardType, setCardType] = useState<'Edahabia' | 'CIB'>('Edahabia');
   const [cardNumber, setCardNumber] = useState<string>('5030');
   const [cardHolder, setCardHolder] = useState<string>(preOrder.buyerName || 'محمد بوعلام');
@@ -91,39 +95,65 @@ export const EdahabiaCibPaymentModal: React.FC<EdahabiaCibPaymentModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="payment-modal-title"
+      aria-describedby="payment-modal-description"
+    >
       <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-stone-200">
         {/* Modal Top Header with SATIM & GIE Monétique compliance branding */}
         <div className="bg-gradient-to-r from-emerald-900 to-stone-900 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-700/60 rounded-2xl border border-emerald-500/40">
+            <div className="p-2.5 bg-emerald-700/60 rounded-2xl border border-emerald-500/40" aria-hidden="true">
               <Lock className="w-6 h-6 text-emerald-200" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-base sm:text-lg">
+                <h3 id="payment-modal-title" className="font-extrabold text-base sm:text-lg">
                   بوابة الدفع الإلكتروني وتأكيد العربون
                 </h3>
                 <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-400/40">
                   SATIM / GIE Monétique
                 </span>
               </div>
-              <p className="text-xs text-stone-300">
+              <p id="payment-modal-description" className="text-xs text-stone-300">
                 حماية العربون في حساب الضمان المشترك المشفر (Escrow Deposit)
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {/* Screen reader audio trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                const speech = `بوابة الدفع الإلكتروني وتأكيد العربون. المحصول: ${preOrder.cropTitle}. إجمالي القيمة: ${totalCropValue} دينار جزائري. قيمة العربون المطلوب إيداعه في حساب الضمان إسكرو بنسبة 10 بالمائة هي ${depositAmount} دينار جزائري. لا يتم تسليم العربون للفلاح إلا بعد فحص شهادة المخبر المعتمدة واستلامكم للمحصول.`;
+                speakText(speech, 'تفاصيل عربون الضمان المالي');
+              }}
+              className="p-1.5 rounded-full bg-emerald-800/80 hover:bg-emerald-700 text-amber-300 transition"
+              title="قراءة صوتية لتفاصيل العربون وحساب الضمان للمكفوفين وضعاف البصر"
+              aria-label="قراءة صوتية لتفاصيل العربون وحساب الضمان للمكفوفين وضعاف البصر"
+            >
+              <Volume2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition"
+              aria-label="إغلاق نافذة الدفع"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Escrow Mechanism Explainer Strip */}
-        <div className="bg-amber-50 border-b border-amber-200/80 p-3.5 px-6 text-xs text-amber-950 flex items-start gap-2.5">
-          <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+        {/* Escrow Mechanism Explainer Strip with screen reader live attributes */}
+        <div 
+          className="bg-amber-50 border-b border-amber-200/80 p-3.5 px-6 text-xs text-amber-950 flex items-start gap-2.5"
+          role="note"
+          aria-label="معلومات نظام الضمان المالي المشترك"
+        >
+          <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" aria-hidden="true" />
           <p className="leading-relaxed">
             <strong>نظام الضمان المشترك (Escrow):</strong> لا يتم تحويل العربون لحساب الفلاح إلا بعد وصول المحصول وفحص شهادة المخبر المعتمدة من قِبلكم. في حال عدم مطابقة المعايير يتم استرجاع المبلغ فورياً.
           </p>
@@ -131,66 +161,80 @@ export const EdahabiaCibPaymentModal: React.FC<EdahabiaCibPaymentModalProps> = (
 
         {/* Step 1: Card Input & Payment Amount */}
         {step === 1 && (
-          <form onSubmit={handleProceedToOtp} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          <form onSubmit={handleProceedToOtp} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto" aria-label="نموذج تفاصيل بطاقة الدفع وإيداع العربون">
             {/* Calculation summary */}
-            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-2 text-xs">
+            <div 
+              className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-2 text-xs"
+              role="region"
+              aria-label="ملخص الحسابات المالية للعربون"
+            >
               <div className="flex justify-between items-center text-stone-600">
                 <span>المحصول المحجوز:</span>
                 <strong className="text-stone-900">{preOrder.cropTitle}</strong>
               </div>
               <div className="flex justify-between items-center text-stone-600">
                 <span>إجمالي قيمة الطلبية التعاقدية:</span>
-                <span className="font-mono font-bold text-stone-800">{totalCropValue.toLocaleString()} دج</span>
+                <span className="font-mono font-bold text-stone-800" aria-label={`${totalCropValue} دينار جزائري`}>
+                  {totalCropValue.toLocaleString()} دج
+                </span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-stone-200 font-extrabold text-sm">
                 <span className="text-emerald-900">قيمة العربون المالي لضمان الجدية (10%):</span>
-                <span className="text-emerald-800 font-mono text-base">{depositAmount.toLocaleString()} دج</span>
+                <span className="text-emerald-800 font-mono text-base" aria-label={`قيمة العربون المودع في حساب الضمان ${depositAmount} دينار جزائري`}>
+                  {depositAmount.toLocaleString()} دج
+                </span>
               </div>
             </div>
 
             {/* Select Card Type: Edahabia or CIB */}
-            <div>
-              <label className="block text-xs font-bold text-stone-700 mb-2">
+            <fieldset>
+              <legend className="block text-xs font-bold text-stone-700 mb-2">
                 اختر وسيلة الدفع الإلكتروني الوطنية:
-              </label>
-              <div className="grid grid-cols-2 gap-3">
+              </legend>
+              <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="نوع البطاقة البنكية">
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={cardType === 'Edahabia'}
                   onClick={() => handleCardTypeSelect('Edahabia')}
                   className={`p-3 rounded-2xl border text-right transition flex items-center justify-between ${
                     cardType === 'Edahabia'
                       ? 'border-amber-500 bg-amber-50/60 shadow-xs ring-2 ring-amber-400/30'
                       : 'border-stone-200 bg-white hover:bg-stone-50'
                   }`}
+                  aria-label="البطاقة الذهبية بريد الجزائر"
                 >
                   <div>
                     <strong className="text-xs font-extrabold text-amber-950 block">البطاقة الذهبية</strong>
                     <span className="text-[10px] text-amber-800">بريد الجزائر (Algérie Poste)</span>
                   </div>
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-stone-950 font-black text-xs shadow-xs">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-stone-950 font-black text-xs shadow-xs" aria-hidden="true">
                     EP
                   </div>
                 </button>
 
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={cardType === 'CIB'}
                   onClick={() => handleCardTypeSelect('CIB')}
                   className={`p-3 rounded-2xl border text-right transition flex items-center justify-between ${
                     cardType === 'CIB'
                       ? 'border-blue-600 bg-blue-50/60 shadow-xs ring-2 ring-blue-500/30'
                       : 'border-stone-200 bg-white hover:bg-stone-50'
                   }`}
+                  aria-label="بطاقة CIB البنكية شبكة ساتيم"
                 >
                   <div>
                     <strong className="text-xs font-extrabold text-blue-950 block">بطاقة CIB البنكية</strong>
                     <span className="text-[10px] text-blue-800">شبكة البنوك الجزائرية (SATIM)</span>
                   </div>
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-500 flex items-center justify-center text-white font-black text-xs shadow-xs">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-500 flex items-center justify-center text-white font-black text-xs shadow-xs" aria-hidden="true">
                     CIB
                   </div>
                 </button>
               </div>
-            </div>
+            </fieldset>
 
             {/* Card Simulation Visual Preview */}
             <div className={`rounded-2xl p-4 text-white shadow-md relative overflow-hidden transition-all ${
@@ -380,18 +424,37 @@ export const EdahabiaCibPaymentModal: React.FC<EdahabiaCibPaymentModalProps> = (
             </div>
 
             {/* Official SATIM electronic receipt */}
-            <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 text-right text-xs space-y-2">
+            <div 
+              className="bg-stone-50 border border-stone-200 rounded-2xl p-4 text-right text-xs space-y-2"
+              role="region"
+              aria-label="الوصل الإلكتروني الرسمي الموثق لعملية إيداع الضمان"
+            >
               <div className="flex items-center justify-between border-b border-stone-200 pb-2">
                 <span className="font-extrabold text-stone-900">وصل إلكتروني رسمي SATIM / GIE</span>
-                <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded text-[10px]">
-                  مضمون (Escrow)
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const speech = `تم تأكيد إيداع العربون في حساب الضمان المشترك بنجاح. المبلغ المقتطع هو ${completedDeposit.amountDzd} دينار جزائري عبر ${completedDeposit.cardType}. رمز الترخيص البنكي هو ${completedDeposit.authCode}. المرجع الوطني ساتيم هو ${completedDeposit.satimRef}. تاريخ المعاملة هو ${completedDeposit.transactionDate}. المبلغ محفوظ ومضمون في حساب الضمان إسكرو حتى تسليم المحصول واعتماد فحص المخبر.`;
+                      speakText(speech, 'تفاصيل وصل إيداع الضمان');
+                    }}
+                    className="p-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-900 transition flex items-center gap-1 text-[10px] font-bold"
+                    title="الاستماع لتفاصيل الوصل البنكي بصوت مسموع"
+                    aria-label="الاستماع لتفاصيل الوصل البنكي بصوت مسموع"
+                  >
+                    <Volume2 className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>قراءة الوصل</span>
+                  </button>
+                  <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded text-[10px]">
+                    مضمون (Escrow)
+                  </span>
+                </div>
               </div>
 
               <div className="space-y-1 text-stone-600">
                 <div className="flex justify-between">
                   <span>المبلغ المقتطع:</span>
-                  <strong className="text-stone-900 font-mono">{completedDeposit.amountDzd.toLocaleString()} دج</strong>
+                  <strong className="text-stone-900 font-mono" aria-label={`المبلغ ${completedDeposit.amountDzd} دينار جزائري`}>{completedDeposit.amountDzd.toLocaleString()} دج</strong>
                 </div>
                 <div className="flex justify-between">
                   <span>نوع البطاقة:</span>

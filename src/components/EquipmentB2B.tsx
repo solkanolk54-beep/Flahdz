@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { AgriculturalEquipment } from '../types/agritech';
+import { AgriculturalEquipment, Crop, Farm } from '../types/agritech';
+import { QuickSearchMapCard } from './QuickSearchMapCard';
 import { 
   Wrench, 
   Tag, 
@@ -11,18 +12,26 @@ import {
   Sun, 
   Zap, 
   Check, 
-  Filter
+  Filter,
+  Map
 } from 'lucide-react';
 
 interface EquipmentB2BProps {
   equipmentList: AgriculturalEquipment[];
   onOpenAddEquipment?: () => void;
+  crops?: Crop[];
+  farms?: Farm[];
+  onOpenGisMap?: () => void;
 }
 
 export const EquipmentB2B: React.FC<EquipmentB2BProps> = ({
   equipmentList,
   onOpenAddEquipment,
+  crops = [],
+  farms = [],
+  onOpenGisMap = () => {},
 }) => {
+  const [showMap, setShowMap] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('الكل');
   const [dealTypeFilter, setDealTypeFilter] = useState<string>('الكل');
 
@@ -101,8 +110,30 @@ export const EquipmentB2B: React.FC<EquipmentB2BProps> = ({
               {deal}
             </button>
           ))}
+
+          <button
+            onClick={() => setShowMap(prev => !prev)}
+            className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1 font-bold ${
+              showMap ? 'bg-[#1B4D3E] text-white' : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Map className="w-3.5 h-3.5" />
+            <span>{showMap ? 'إخفاء الخريطة' : 'خريطة العتاد 🚜'}</span>
+          </button>
         </div>
       </div>
+
+      {/* Interactive Quick Search Map Preview */}
+      {showMap && (
+        <div className="animate-fade-in">
+          <QuickSearchMapCard
+            crops={crops}
+            farms={farms}
+            equipmentList={equipmentList}
+            onOpenFullMap={onOpenGisMap}
+          />
+        </div>
+      )}
 
       {/* Equipment Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useAccessibility } from '../context/AccessibilityContext';
-import { Crop, Farm, StoryReel } from '../types/agritech';
+import { Crop, Farm, StoryReel, AgriculturalEquipment } from '../types/agritech';
+import { GisCategoryPipeline } from './GisCategoryPipeline';
+import { QuickSearchMapCard } from './QuickSearchMapCard';
 import { 
   Sprout, 
   MapPin, 
+  Map,
   PhoneCall, 
   MessageSquare, 
   ShieldCheck, 
@@ -19,67 +22,134 @@ import {
   ArrowUpRight,
   Clock,
   Volume2,
-  VolumeX
+  VolumeX,
+  Lock,
+  CheckCircle2,
+  Navigation
 } from 'lucide-react';
 
 interface CropMarketplaceProps {
   crops: Crop[];
   farms: Farm[];
+  equipmentList?: AgriculturalEquipment[];
   onOpenPreOrder: (crop: Crop) => void;
   onOpenTraceability: (farm: Farm) => void;
   onOpenStoryReel: (reel: StoryReel) => void;
   onRequestContract: (crop: Crop) => void;
   onOpenFarmProfile?: (farm: Farm) => void;
+  onOpenGisMap?: () => void;
+  onOpenAddCrop?: () => void;
+  onOpenFlutterCode?: () => void;
+  onOpenCarrierMatch?: () => void;
 }
 
 export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
   crops,
   farms,
+  equipmentList = [],
   onOpenPreOrder,
   onOpenTraceability,
   onOpenStoryReel,
   onRequestContract,
   onOpenFarmProfile,
+  onOpenGisMap = () => {},
+  onOpenAddCrop = () => {},
+  onOpenFlutterCode = () => {},
+  onOpenCarrierMatch = () => {},
 }) => {
   const { isAccessibleMode, speakText, isSpeaking, stopSpeaking, currentlySpeakingText } = useAccessibility();
   const [selectedCategory, setSelectedCategory] = useState<string>('الكل');
   const [selectedWilaya, setSelectedWilaya] = useState<string>('الكل');
   const [harvestFilter, setHarvestFilter] = useState<'all' | 'ready' | 'preorder'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-
-  const categories = [
-    'الكل',
-    'أشجار مثمرة وزيتون',
-    'تمور',
-    'خضروات',
-    'حمضيات',
-    'حبوب وبقوليات',
-    'دواجن ومواشي'
-  ];
+  
+  // GIS and Quality Fast Filters
+  const [radius50kmActive, setRadius50kmActive] = useState<boolean>(false);
+  const [inraaOnlyActive, setInraaOnlyActive] = useState<boolean>(false);
+  const [escrowOnlyActive, setEscrowOnlyActive] = useState<boolean>(false);
+  const [showQuickMap, setShowQuickMap] = useState<boolean>(true);
 
   // Aggregate stories from all farms
   const allStories: { reel: StoryReel; farmName: string }[] = farms.flatMap(f => 
     f.stories.map(s => ({ reel: s, farmName: f.name }))
   );
 
+  const isCropWithin50Km = (crop: Crop) => {
+    // Spatial proximity calculation relative to Algerian Mila/North-East Cluster center
+    return crop.wilaya.includes('ميلة') || crop.wilaya.includes('قسنطينة');
+  };
+
+  const matchesCategoryFilter = (crop: Crop) => {
+    if (selectedCategory === 'الكل' || selectedCategory === 'حسب الولاية') return true;
+    if (selectedCategory === 'الخضر') {
+      return crop.category === 'خضروات' || crop.title.includes('خضر') || crop.title.includes('بطاطا') || crop.title.includes('طماطم') || crop.title.includes('ثوم');
+    }
+    if (selectedCategory === 'الفواكه') {
+      return crop.category === 'حمضيات' || crop.category === 'تمور' || crop.category === 'أشجار مثمرة وزيتون' || crop.title.includes('فاكهة') || crop.title.includes('فراولة') || crop.title.includes('برتقال');
+    }
+    if (selectedCategory === 'المواشي') {
+      return crop.category === 'دواجن ومواشي' && (crop.title.includes('أغنام') || crop.variety.includes('أولاد جلال') || crop.unit === 'رأس');
+    }
+    if (selectedCategory === 'الدواجن') {
+      return crop.category === 'دواجن ومواشي' && crop.title.includes('دجاج');
+    }
+    if (selectedCategory === 'البيض') {
+      return crop.title.includes('بيض');
+    }
+    if (selectedCategory === 'الأرانب') {
+      return crop.title.includes('أرانب');
+    }
+    if (selectedCategory === 'البذور') {
+      return crop.title.includes('بذور') || (crop.category === 'حبوب وبقوليات' && crop.title.includes('قمح'));
+    }
+    if (selectedCategory === 'منتجات أخرى') {
+      return crop.category === 'أعلاف' || crop.title.includes('عسل');
+    }
+    return crop.category === selectedCategory;
+  };
+
   const filteredCrops = crops.filter(crop => {
-    const matchesCategory = selectedCategory === 'الكل' || crop.category === selectedCategory;
+    const matchesCategory = matchesCategoryFilter(crop);
     const matchesWilaya = selectedWilaya === 'الكل' || crop.wilaya.includes(selectedWilaya);
     const matchesHarvest = 
       harvestFilter === 'all' ||
       (harvestFilter === 'ready' && crop.harvestStatus === 'جاهز للشحن الفوري') ||
       (harvestFilter === 'preorder' && crop.harvestStatus === 'حجز مسبق قبل الجني');
+    
+    const matchesRadius = !radius50kmActive || isCropWithin50Km(crop);
+    const matchesInraa = !inraaOnlyActive || Boolean(crop.labCertificate);
+    const matchesEscrow = !escrowOnlyActive || crop.isPreOrderAllowed;
+
     const matchesSearch = 
       crop.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       crop.variety.toLowerCase().includes(searchQuery.toLowerCase()) ||
       crop.farmName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       crop.commune.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesCategory && matchesWilaya && matchesHarvest && matchesSearch;
+    return matchesCategory && matchesWilaya && matchesHarvest && matchesRadius && matchesInraa && matchesEscrow && matchesSearch;
   });
 
   return (
     <div className="space-y-6">
+      {/* 1. Interactive GIS Category Grid Pipeline (شبكة التصنيفات البصرية وخط الفلترة GIS) */}
+      <GisCategoryPipeline
+        activeCategoryId={selectedCategory}
+        onSelectCategory={(catId) => setSelectedCategory(catId)}
+        onOpenGisMap={onOpenGisMap}
+        onOpenAddCrop={onOpenAddCrop}
+        onOpenFlutterCode={onOpenFlutterCode}
+        onOpenPreOrder={onOpenPreOrder}
+        onOpenCarrierMatch={onOpenCarrierMatch}
+        radius50kmActive={radius50kmActive}
+        onToggleRadius50km={() => setRadius50kmActive(prev => !prev)}
+        inraaOnlyActive={inraaOnlyActive}
+        onToggleInraaOnly={() => setInraaOnlyActive(prev => !prev)}
+        escrowOnlyActive={escrowOnlyActive}
+        onToggleEscrowOnly={() => setEscrowOnlyActive(prev => !prev)}
+        selectedWilaya={selectedWilaya}
+        onSelectWilaya={(w) => setSelectedWilaya(w)}
+        equipmentList={equipmentList}
+      />
       {/* Field Reels / Stories Bar - Real-time Field Transparency */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-xs">
         <div className="flex items-center justify-between mb-3">
@@ -226,23 +296,70 @@ export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
           </div>
         </div>
 
-        {/* Category Pills */}
-        <div className="flex gap-2 overflow-x-auto pt-2 border-t border-stone-100 pb-1 scrollbar-none">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                selectedCategory === cat
-                  ? 'bg-emerald-700 text-white shadow-xs'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Category Fast Switcher Pills & Map Card Toggle */}
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-stone-100 pb-1">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none flex-1">
+            {[
+              'الكل',
+              'الخضر',
+              'الفواكه',
+              'المواشي',
+              'الدواجن',
+              'البيض',
+              'الأرانب',
+              'البذور',
+              'المشاتل',
+              'المعدات',
+              'منتجات أخرى'
+            ].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                  selectedCategory === cat
+                    ? 'bg-emerald-700 text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Quick Map Visibility Toggle */}
+          <button
+            onClick={() => setShowQuickMap(prev => !prev)}
+            className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              showQuickMap
+                ? 'bg-[#1B4D3E] text-white shadow-xs'
+                : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200'
+            }`}
+            title={showQuickMap ? 'إخفاء خريطة البحث السريع' : 'إظهار خريطة البحث السريع'}
+          >
+            <Map className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">
+              {showQuickMap ? 'إخفاء الخريطة' : 'خريطة البحث السريع 🗺️'}
+            </span>
+            <span className="sm:hidden">
+              {showQuickMap ? 'الخريطة ✓' : 'خريطة 🗺️'}
+            </span>
+          </button>
         </div>
       </div>
+
+      {/* 2. Interactive Discovery Map Card (OpenStreetMap / Leaflet Widget matching the user's design) */}
+      {showQuickMap && (
+        <div className="animate-fade-in">
+          <QuickSearchMapCard
+            crops={crops}
+            farms={farms}
+            equipmentList={equipmentList}
+            onOpenFullMap={onOpenGisMap}
+            onSelectCrop={(crop) => onOpenPreOrder(crop)}
+            onSelectFarm={(farm) => onOpenFarmProfile?.(farm)}
+          />
+        </div>
+      )}
 
       {/* Crop Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -276,7 +393,7 @@ export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
                       </span>
                     ) : (
                       <span className="bg-emerald-600 text-white font-extrabold text-[11px] px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
-                        <CheckCircleIcon className="w-3 h-3" />
+                        <CheckCircle2 className="w-3 h-3" />
                         جاهز للشحن الفوري
                       </span>
                     )}
@@ -285,6 +402,22 @@ export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
                       <span className="bg-rose-600 text-white font-extrabold text-[11px] px-2 py-0.5 rounded-full flex items-center gap-0.5">
                         <TrendingDown className="w-3 h-3" />
                         توفير {priceSavings}% عن الوسيط
+                      </span>
+                    )}
+
+                    {/* GIS 50 KM Proximity Badge */}
+                    {isCropWithin50Km(crop) && (
+                      <span className="bg-blue-600/90 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                        <Navigation className="w-2.5 h-2.5" />
+                        <span>نطاق 50 كم 📍</span>
+                      </span>
+                    )}
+
+                    {/* Escrow 10-15% pre-order badge */}
+                    {crop.isPreOrderAllowed && (
+                      <span className="bg-amber-400 text-stone-950 font-extrabold text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                        <Lock className="w-2.5 h-2.5" />
+                        <span>عربون Escrow ✓</span>
                       </span>
                     )}
                   </div>
@@ -359,7 +492,7 @@ export const CropMarketplace: React.FC<CropMarketplaceProps> = ({
                           ? `شهادة المخبر تثبت حموضة بنسبة ${crop.labCertificate.acidityLevel}`
                           : '';
                         const speech = `محصول: ${crop.title}، صنف: ${crop.variety}، من ${crop.farmName} في ${crop.wilaya}. سعر المزرعة المباشر هو ${crop.pricePerUnit} دينار جزائري لكل ${crop.unit}. الكمية المتاحة: ${crop.quantityAvailable} ${crop.unit}. ${harvestInfo}. ${certInfo}.`;
-                        speakText(speech, crop.title);
+                        speakText(speech, crop.title, true);
                       }
                     }}
                     className={`w-full py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition ${

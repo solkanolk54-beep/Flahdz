@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { Crop, PreOrderRequest } from '../types/agritech';
 import { 
   X, 
@@ -11,7 +12,8 @@ import {
   Building,
   Utensils,
   Store,
-  UserCheck
+  UserCheck,
+  Volume2
 } from 'lucide-react';
 
 interface PreOrderModalProps {
@@ -21,6 +23,7 @@ interface PreOrderModalProps {
 }
 
 export const PreOrderModal: React.FC<PreOrderModalProps> = ({ crop, onClose, onSubmit }) => {
+  const { speakText } = useAccessibility();
   const [buyerName, setBuyerName] = useState<string>('');
   const [buyerPhone, setBuyerPhone] = useState<string>('');
   const [buyerType, setBuyerType] = useState<PreOrderRequest['buyerType']>('مطعم / فندق');
@@ -32,6 +35,7 @@ export const PreOrderModal: React.FC<PreOrderModalProps> = ({ crop, onClose, onS
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
 
   const totalPrice = quantity * offeredPrice;
+  const deposit10 = Math.round(totalPrice * 0.10);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,16 +65,21 @@ export const PreOrderModal: React.FC<PreOrderModalProps> = ({ crop, onClose, onS
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="preorder-modal-title"
+    >
       <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-stone-200">
         {/* Header */}
         <div className="bg-gradient-to-r from-amber-700 to-amber-900 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-600/60 rounded-xl border border-amber-400/40">
+            <div className="p-2.5 bg-amber-600/60 rounded-xl border border-amber-400/40" aria-hidden="true">
               <CalendarDays className="w-6 h-6 text-amber-200" />
             </div>
             <div>
-              <h3 className="font-extrabold text-base sm:text-lg">
+              <h3 id="preorder-modal-title" className="font-extrabold text-base sm:text-lg">
                 إبداء رغبة الشراء وحجز المحصول (Purchase Intent)
               </h3>
               <p className="text-xs text-amber-200">
@@ -78,12 +87,27 @@ export const PreOrderModal: React.FC<PreOrderModalProps> = ({ crop, onClose, onS
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                const speech = `إبداء رغبة الشراء وحجز المحصول المسبق. المحصول: ${crop.title} من المزرعة ${crop.farmName} في ${crop.wilaya}. الكمية المحددة: ${quantity} ${crop.unit}. السعر المقترح: ${offeredPrice} دينار جزائري للوحدة. إجمالي القيمة: ${totalPrice} دينار جزائري. قيمة العربون المالي المطلوب إيداعه في حساب الضمان إسكرو بنسبة 10 بالمائة هي ${deposit10} دينار جزائري.`;
+                speakText(speech, 'ملخص طلب الحجز المسبق والعربون');
+              }}
+              className="p-1.5 rounded-full bg-amber-800 hover:bg-amber-700 text-amber-200 transition"
+              title="الاستماع لتفاصيل الحجز المسبق والعربون المالي"
+              aria-label="الاستماع لتفاصيل الحجز المسبق والعربون المالي"
+            >
+              <Volume2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition"
+              aria-label="إغلاق النافذة"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {isSubmitted ? (
@@ -245,14 +269,27 @@ export const PreOrderModal: React.FC<PreOrderModalProps> = ({ crop, onClose, onS
               )}
             </div>
 
-            {/* Total Estimated Calculation */}
-            <div className="bg-amber-50/80 p-3.5 rounded-2xl border border-amber-200 flex items-center justify-between">
-              <div>
-                <span className="text-xs text-stone-600 block">القيمة الإجمالية التقديرية للطلبية:</span>
-                <span className="text-xs text-stone-400">بدون عمولة وسيط</span>
+            {/* Total Estimated Calculation & Escrow Deposit */}
+            <div 
+              className="bg-amber-50/80 p-3.5 rounded-2xl border border-amber-200 space-y-2"
+              role="region"
+              aria-label="الحساب المالي الإجمالي وعربون الضمان"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-stone-700 block font-bold">القيمة الإجمالية التقديرية للطلبية:</span>
+                  <span className="text-[11px] text-stone-500">مباشر من المزرعة بدون عمولة وسيط</span>
+                </div>
+                <div className="text-base font-black text-amber-950 font-mono" aria-label={`القيمة الإجمالية ${totalPrice} دينار جزائري`}>
+                  {totalPrice.toLocaleString()} دج
+                </div>
               </div>
-              <div className="text-base font-black text-amber-900 font-mono">
-                {totalPrice.toLocaleString()} دج
+
+              <div className="flex items-center justify-between pt-2 border-t border-amber-200/80 text-xs">
+                <span className="text-amber-950 font-bold">عربون تأكيد الجدية في الضمان (Escrow 10%):</span>
+                <span className="font-mono text-sm font-black text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-md" aria-label={`قيمة العربون المودع في حساب الضمان ${deposit10} دينار جزائري`}>
+                  {deposit10.toLocaleString()} دج
+                </span>
               </div>
             </div>
 

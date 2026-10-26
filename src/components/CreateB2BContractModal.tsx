@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { B2BEnterpriseContract, Crop, Farm } from '../types/agritech';
 import { 
   X, 
@@ -8,7 +9,8 @@ import {
   ShieldCheck, 
   Truck, 
   CheckCircle,
-  Plus
+  Plus,
+  Volume2
 } from 'lucide-react';
 
 interface CreateB2BContractModalProps {
@@ -24,6 +26,7 @@ export const CreateB2BContractModal: React.FC<CreateB2BContractModalProps> = ({
   onClose,
   onCreateContract,
 }) => {
+  const { speakText } = useAccessibility();
   const [enterpriseName, setEnterpriseName] = useState('');
   const [enterpriseType, setEnterpriseType] = useState<B2BEnterpriseContract['enterpriseType']>('سلسلة فنادق');
   const [selectedCropId, setSelectedCropId] = useState(crops[0]?.id || 'crop-1');
@@ -80,16 +83,24 @@ export const CreateB2BContractModal: React.FC<CreateB2BContractModalProps> = ({
     onClose();
   };
 
+  const totalContractValue = totalQuantity * pricePerUnit;
+  const escrowDeposit15 = Math.round(totalContractValue * 0.15);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-b2b-contract-title"
+    >
       <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-stone-200">
         <div className="bg-gradient-to-r from-stone-900 to-emerald-950 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-700/60 rounded-xl border border-emerald-500/40">
+            <div className="p-2.5 bg-emerald-700/60 rounded-xl border border-emerald-500/40" aria-hidden="true">
               <Building2 className="w-6 h-6 text-emerald-200" />
             </div>
             <div>
-              <h3 className="font-extrabold text-base sm:text-lg">
+              <h3 id="create-b2b-contract-title" className="font-extrabold text-base sm:text-lg">
                 صياغة وتفعيل عقد توريد سنوي B2B
               </h3>
               <p className="text-xs text-stone-300">
@@ -97,12 +108,27 @@ export const CreateB2BContractModal: React.FC<CreateB2BContractModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                const speech = `صياغة عقد توريد سنوي. المحصول المختار: ${selectedCrop.title} من ${selectedCrop.farmName}. الكمية السنوية: ${totalQuantity} ${selectedCrop.unit}. سعر الوحدة: ${pricePerUnit} دينار جزائري. القيمة الإجمالية للعقد: ${totalContractValue} دينار جزائري. قيمة العربون المطلوب إيداعه في حساب الضمان إسكرو بنسبة 15 بالمائة هي ${escrowDeposit15} دينار جزائري.`;
+                speakText(speech, 'ملخص بنود العقد السنوي');
+              }}
+              className="p-1.5 rounded-full bg-emerald-800/80 hover:bg-emerald-700 text-amber-300 transition"
+              title="الاستماع لملخص العقد والعربون المالي"
+              aria-label="الاستماع لملخص العقد السنوي وحساب الضمان إسكرو"
+            >
+              <Volume2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition"
+              aria-label="إغلاق النافذة"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto text-xs">
@@ -229,10 +255,22 @@ export const CreateB2BContractModal: React.FC<CreateB2BContractModalProps> = ({
             />
           </div>
 
-          <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 text-emerald-900">
-            <span className="font-bold block mb-1">القيمة الإجمالية للعقد السنوي:</span>
-            <div className="font-mono text-base font-black text-emerald-800">
-              {(totalQuantity * pricePerUnit).toLocaleString()} دج
+          <div 
+            className="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 text-emerald-900 space-y-2"
+            role="region"
+            aria-label="الحساب المالي الإجمالي وعربون الضمان المشفر"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs">القيمة الإجمالية للعقد السنوي:</span>
+              <span className="font-mono text-base font-black text-emerald-800" aria-label={`القيمة الإجمالية ${totalContractValue} دينار جزائري`}>
+                {totalContractValue.toLocaleString()} دج
+              </span>
+            </div>
+            <div className="flex items-center justify-between pt-2 border-t border-emerald-200/80 text-xs">
+              <span className="text-emerald-950 font-bold">عربون الضمان المشفر (Escrow 15%):</span>
+              <span className="font-mono text-sm font-black text-emerald-900 bg-emerald-200/60 px-2 py-0.5 rounded-md" aria-label={`قيمة العربون المالي المودع في الضمان المشفر ${escrowDeposit15} دينار جزائري`}>
+                {escrowDeposit15.toLocaleString()} دج
+              </span>
             </div>
           </div>
 

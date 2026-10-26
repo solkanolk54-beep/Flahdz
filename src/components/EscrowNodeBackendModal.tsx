@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { 
   X, 
   Database, 
@@ -19,7 +20,9 @@ import {
   FlaskConical,
   CreditCard,
   Building2,
-  DollarSign
+  DollarSign,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 interface EscrowNodeBackendModalProps {
@@ -28,6 +31,7 @@ interface EscrowNodeBackendModalProps {
 }
 
 export const EscrowNodeBackendModal: React.FC<EscrowNodeBackendModalProps> = ({ isOpen, onClose }) => {
+  const { isAccessibleMode, speakText, isSpeaking, stopSpeaking } = useAccessibility();
   const [activeTab, setActiveTab] = useState<'simulation' | 'node-code' | 'postgres-schema'>('simulation');
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
 
@@ -340,36 +344,59 @@ module.exports = router;
 `;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="escrow-modal-title"
+      aria-describedby="escrow-modal-desc"
+    >
       <div className="bg-stone-900 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-stone-700 text-stone-100">
         
         {/* Header */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-stone-950 via-emerald-950 to-stone-950 border-b border-stone-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-700/50 rounded-2xl border border-emerald-500/40 text-emerald-300">
+            <div className="p-2.5 bg-emerald-700/50 rounded-2xl border border-emerald-500/40 text-emerald-300" aria-hidden="true">
               <Server className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-black text-base sm:text-lg text-white">
+                <h3 id="escrow-modal-title" className="font-black text-base sm:text-lg text-white">
                   محرك عقود التوريد B2B وحساب الضمان Escrow (Node.js + PostgreSQL)
                 </h3>
                 <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-mono px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">
                   v1.2 Live Engine
                 </span>
               </div>
-              <p className="text-xs text-stone-400">
+              <p id="escrow-modal-desc" className="text-xs text-stone-400">
                 إدارة دورة حياة العقود، حجز العربون 15%، واشتراط اعتماد تقارير INRAA/CACQE لتحرير الأموال
               </p>
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {/* Audio narration for visually impaired developers/auditors */}
+            <button
+              type="button"
+              onClick={() => {
+                const speech = `محرك عقود التوريد B2B ونظام حساب الضمان المشفر إسكرو. يعمل عبر نود جي إس وقاعدة بيانات بوستجري إس كيو إل. يدير نقطتي نهاية برمجية رئيسيتين: الأولى تجميع وحجز عربون بنسبة 15 بالمائة من العقد في حساب الضمان المشفر. والثانية التحقق التلقائي من مطابقة التحليل المخبري الصادر عن مخبر إنرا مثل نسبة الحموضة أقل من 0.8 بالمائة والخلو التام من المبيدات، بالإضافة لتوقيع وصل الاستلام من المشتري قبل تحرير المبالغ لحساب المزرعة.`;
+                speakText(speech, 'محرك حساب الضمان المالي إسكرو');
+              }}
+              className="p-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-amber-300 border border-emerald-500/40 transition"
+              title="الاستماع لشرح منطق حساب الضمان المالي والتحقق المخبري"
+              aria-label="الاستماع لشرح منطق حساب الضمان المالي والتحقق المخبري"
+            >
+              <Volume2 className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition"
+              aria-label="إغلاق نافذة محرك الضمان"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
@@ -500,19 +527,40 @@ module.exports = router;
                 </div>
 
                 {fundLogs && (
-                  <div className={`p-3.5 rounded-xl border font-mono text-xs ${
-                    fundLogs.success 
-                      ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' 
-                      : 'bg-red-950/40 border-red-500/40 text-red-300'
-                  }`}>
+                  <div 
+                    role="status"
+                    aria-live="polite"
+                    className={`p-3.5 rounded-xl border font-mono text-xs ${
+                      fundLogs.success 
+                        ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' 
+                        : 'bg-red-950/40 border-red-500/40 text-red-300'
+                    }`}
+                  >
                     <div className="flex items-center justify-between border-b border-current/20 pb-1.5 mb-2">
                       <span className="font-bold flex items-center gap-1">
                         {fundLogs.success ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                         HTTP Response Status: {fundLogs.status}
                       </span>
-                      <span className="text-[10px] opacity-75">{fundLogs.timestamp}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const speech = fundLogs.success
+                              ? `تمت استجابة تمويل العربون بنجاح برمز 200. ${fundLogs.response.message}. حالة الضمان: محجوز في حساب الضمان المشفر إسكرو. المبلغ المودع: ${fundLogs.response.deposit_amount_dzd} دينار جزائري.`
+                              : `فشلت عملية تمويل الضمان برمز 404. ${fundLogs.response.message}`;
+                            speakText(speech, 'نتيجة استجابة تمويل الضمان');
+                          }}
+                          className="text-[10px] bg-stone-700 hover:bg-stone-600 px-2 py-0.5 rounded text-amber-300 flex items-center gap-1 font-sans"
+                          title="قراءة صوتية لنتيجة الاستجابة"
+                          aria-label="قراءة صوتية لنتيجة استجابة تمويل الضمان"
+                        >
+                          <Volume2 className="w-3 h-3" />
+                          <span>نطق النتيجة</span>
+                        </button>
+                        <span className="text-[10px] opacity-75">{fundLogs.timestamp}</span>
+                      </div>
                     </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap text-[11px]">
+                    <pre className="overflow-x-auto whitespace-pre-wrap text-[11px]" aria-label="بيانات الاستجابة بصيغة جيسون">
                       {JSON.stringify(fundLogs.response, null, 2)}
                     </pre>
                   </div>
@@ -633,17 +681,38 @@ module.exports = router;
                 </div>
 
                 {releaseLogs && (
-                  <div className={`p-3.5 rounded-xl border font-mono text-xs ${
-                    releaseLogs.success 
-                      ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' 
-                      : 'bg-red-950/40 border-red-500/40 text-red-300'
-                  }`}>
+                  <div 
+                    role="status"
+                    aria-live="polite"
+                    className={`p-3.5 rounded-xl border font-mono text-xs ${
+                      releaseLogs.success 
+                        ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' 
+                        : 'bg-red-950/40 border-red-500/40 text-red-300'
+                    }`}
+                  >
                     <div className="flex items-center justify-between border-b border-current/20 pb-1.5 mb-2">
                       <span className="font-bold flex items-center gap-1">
                         {releaseLogs.success ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-                        HTTP Status: {releaseLogs.status} - {releaseLogs.success ? 'RELEASED_TO_FARMER' : 'REFUNDED_TO_BUYER'}
+                        HTTP Status: {releaseLogs.status} - {releaseLogs.success ? 'تحرير الأموال للمزرعة (RELEASED)' : 'استرجاع للمشتري (REFUNDED)'}
                       </span>
-                      <span className="text-[10px] opacity-75">{releaseLogs.timestamp}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const speech = releaseLogs.success
+                              ? `نجحت عملية فحص المخبر برمز 200. ${releaseLogs.response.message}. تم تحرير مبلغ ${releaseLogs.response.amount_released} دينار جزائري لحساب المزرعة بنجاح. مرجع التحويل البنكي هو ${releaseLogs.response.bank_transfer_ref}.`
+                              : `تم رفض تحرير الأموال برمز 422 لعدم مطابقة الشروط. ${releaseLogs.response.message}. تم إرجاع المبلغ لحساب المشتري. فحص الحموضة: ${releaseLogs.reasons?.acidity_check}. فحص المبيدات: ${releaseLogs.reasons?.pesticide_check}.`;
+                            speakText(speech, 'نتيجة فحص وتحرير أموال الضمان');
+                          }}
+                          className="text-[10px] bg-stone-700 hover:bg-stone-600 px-2 py-0.5 rounded text-amber-300 flex items-center gap-1 font-sans"
+                          title="قراءة صوتية لنتيجة فحص وتحرير الدفعة"
+                          aria-label="قراءة صوتية لنتيجة فحص وتحرير دفعة الضمان"
+                        >
+                          <Volume2 className="w-3 h-3" />
+                          <span>نطق النتيجة</span>
+                        </button>
+                        <span className="text-[10px] opacity-75">{releaseLogs.timestamp}</span>
+                      </div>
                     </div>
                     {releaseLogs.reasons && (
                       <div className="mb-2 p-2 bg-black/40 rounded text-[11px] space-y-0.5">
@@ -652,7 +721,7 @@ module.exports = router;
                         <p>• موافقة المشتري: {releaseLogs.reasons.buyer_approval}</p>
                       </div>
                     )}
-                    <pre className="overflow-x-auto whitespace-pre-wrap text-[11px]">
+                    <pre className="overflow-x-auto whitespace-pre-wrap text-[11px]" aria-label="بيانات نتيجة فحص الشحنة بصيغة جيسون">
                       {JSON.stringify(releaseLogs.response, null, 2)}
                     </pre>
                   </div>

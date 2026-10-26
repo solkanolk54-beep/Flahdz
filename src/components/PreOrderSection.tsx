@@ -241,15 +241,32 @@ export const PreOrderSection: React.FC<PreOrderSectionProps> = ({
                   {req.offeredPricePerUnit.toLocaleString()} دج / وحدة
                 </div>
                 
-                <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1" aria-label={`حالة الطلب: ${req.status}`}>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
                   {req.status}
                 </span>
+
+                {/* Screen reader audio readout for this escrow transaction */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const deposit10 = Math.round(req.quantity * req.offeredPricePerUnit * 0.10);
+                    const totalVal = req.quantity * req.offeredPricePerUnit;
+                    const speech = `طلب حجز مسبق من ${req.buyerName}، نوع المشتري: ${req.buyerType}. لمحصول ${req.cropTitle} بكمية ${req.quantity} وحدة. السعر المقترح هو ${req.offeredPricePerUnit} دينار جزائري للوحدة. إجمالي قيمة الطلبية ${totalVal} دينار جزائري. قيمة العربون المطلوب إيداعه في حساب الضمان إسكرو بنسبة 10 بالمائة هي ${deposit10} دينار جزائري عبر البطاقة الذهبية أو البطاقة البنكية سي إي بي.`;
+                    speakText(speech, `تفاصيل طلب حجز ${req.cropTitle}`);
+                  }}
+                  className="p-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 transition"
+                  title="استماع صوتي لتفاصيل طلب الحجز والعربون للمكفوفين وضعاف البصر"
+                  aria-label={`استماع صوتي لتفاصيل طلب حجز ${req.cropTitle} وقيمة العربون`}
+                >
+                  <Volume2 className="w-3.5 h-3.5 text-amber-700" />
+                </button>
 
                 <button
                   onClick={() => onOpenPaymentModal(req)}
                   className="bg-amber-500 hover:bg-amber-600 text-stone-950 font-black px-3 py-1.5 rounded-xl text-[11px] shadow-xs flex items-center gap-1.5 transition active:scale-95"
                   title="تأكيد العربون بنسبة 10% في حساب الضمان عبر البطاقة الذهبية أو CIB"
+                  aria-label={`تأكيد دفع عربون الضمان المالي لمحصول ${req.cropTitle} بقيمة ${Math.round(req.quantity * req.offeredPricePerUnit * 0.1)} دينار جزائري`}
                 >
                   <span>تأكيد العربون (Edahabia/CIB)</span>
                 </button>

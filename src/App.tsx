@@ -51,6 +51,9 @@ import { CreateB2BContractModal } from './components/CreateB2BContractModal';
 import { ShipmentLabCertificateModal } from './components/ShipmentLabCertificateModal';
 import { B2BContractAgreementModal } from './components/B2BContractAgreementModal';
 import { EscrowNodeBackendModal } from './components/EscrowNodeBackendModal';
+import { FarmTechnicalSettingsModal } from './components/FarmTechnicalSettingsModal';
+import { FarmPublicProfileModal } from './components/FarmPublicProfileModal';
+import { FlutterCodeModal } from './components/FlutterCodeModal';
 
 import { 
   Sprout, 
@@ -137,6 +140,15 @@ export default function App() {
   const [selectedShipmentLab, setSelectedShipmentLab] = useState<B2BShipment | null>(null);
   const [b2bAgreementModalOpen, setB2bAgreementModalOpen] = useState<boolean>(false);
   const [escrowNodeModalOpen, setEscrowNodeModalOpen] = useState<boolean>(false);
+  const [farmSettingsOpen, setFarmSettingsOpen] = useState<boolean>(false);
+  const [publicProfileFarm, setPublicProfileFarm] = useState<Farm | null>(null);
+  const [flutterModalOpen, setFlutterModalOpen] = useState<boolean>(false);
+
+  const handleUpdateFarm = (updatedFarm: Farm) => {
+    setFarms(prev => prev.map(f => f.id === updatedFarm.id ? updatedFarm : f));
+    setSyncNotice(`تم تحديث المعايير التقنية ومصادر السقي لمزرعة "${updatedFarm.name}" بنجاح!`);
+    setTimeout(() => setSyncNotice(null), 4000);
+  };
 
   // Sync background queue when switching from Offline to Online
   useEffect(() => {
@@ -287,6 +299,7 @@ export default function App() {
         onOpenAddCrop={() => setAddCropOpen(true)}
         pendingOfflineCount={offlineQueue.length}
         alertsCount={aiAlerts.length}
+        onOpenFarmSettings={() => setFarmSettingsOpen(true)}
       />
 
       {/* Sync / Payment Notification Banner */}
@@ -393,10 +406,16 @@ export default function App() {
           <CropMarketplace
             crops={crops}
             farms={farms}
+            equipmentList={equipmentList}
             onOpenPreOrder={(c) => setPreOrderCrop(c)}
             onOpenTraceability={(f) => setTraceabilityFarm(f)}
             onOpenStoryReel={(r) => setStoryReel(r)}
             onRequestContract={(c) => setContractCrop(c)}
+            onOpenFarmProfile={(f) => setPublicProfileFarm(f)}
+            onOpenGisMap={() => setActiveTab('gis')}
+            onOpenAddCrop={() => setAddCropOpen(true)}
+            onOpenFlutterCode={() => setFlutterModalOpen(true)}
+            onOpenCarrierMatch={() => setActiveTab('carriers')}
           />
         )}
 
@@ -409,6 +428,8 @@ export default function App() {
             onSelectFarm={(f) => {}}
             onOpenTraceability={(f) => setTraceabilityFarm(f)}
             onOpenPreOrder={(c) => setPreOrderCrop(c)}
+            onOpenFarmProfile={(f) => setPublicProfileFarm(f)}
+            onOpenFarmSettings={() => setFarmSettingsOpen(true)}
           />
         )}
 
@@ -452,12 +473,16 @@ export default function App() {
         {activeTab === 'carriers' && (
           <CarrierMatching
             carriers={carriers}
+            contracts={enterpriseContracts}
           />
         )}
 
         {activeTab === 'equipment' && (
           <EquipmentB2B
             equipmentList={equipmentList}
+            crops={crops}
+            farms={farms}
+            onOpenGisMap={() => setActiveTab('gis')}
           />
         )}
 
@@ -604,6 +629,40 @@ export default function App() {
       <EscrowNodeBackendModal
         isOpen={escrowNodeModalOpen}
         onClose={() => setEscrowNodeModalOpen(false)}
+      />
+
+      {/* Farm Technical Agronomic & Soil/Irrigation Settings Modal */}
+      <FarmTechnicalSettingsModal
+        isOpen={farmSettingsOpen}
+        onClose={() => setFarmSettingsOpen(false)}
+        farms={farms}
+        onUpdateFarm={handleUpdateFarm}
+        onViewFarmPublicProfile={(farm) => {
+          setFarmSettingsOpen(false);
+          setPublicProfileFarm(farm);
+        }}
+      />
+
+      {/* Farm Public Profile Modal with Visual Soil & Water Analytics */}
+      {publicProfileFarm && (
+        <FarmPublicProfileModal
+          farm={publicProfileFarm}
+          crops={crops}
+          isOpen={!!publicProfileFarm}
+          onClose={() => setPublicProfileFarm(null)}
+          onOpenSettings={(f) => {
+            setPublicProfileFarm(null);
+            setFarmSettingsOpen(true);
+          }}
+          onOpenTraceability={(f) => setTraceabilityFarm(f)}
+          onOpenPreOrder={(c) => setPreOrderCrop(c)}
+        />
+      )}
+
+      {/* Flutter Mobile Architecture & Dart Source Code Modal */}
+      <FlutterCodeModal
+        isOpen={flutterModalOpen}
+        onClose={() => setFlutterModalOpen(false)}
       />
 
       {/* Floating Audio Bar and Accessibility Controls for Elderly Farmers */}

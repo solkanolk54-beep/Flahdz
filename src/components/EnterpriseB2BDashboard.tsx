@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { B2BEnterpriseContract, B2BShipment } from '../types/agritech';
 import { 
   Building2, 
@@ -17,7 +18,8 @@ import {
   TrendingUp,
   Receipt,
   Server,
-  Database
+  Database,
+  Volume2
 } from 'lucide-react';
 
 interface EnterpriseB2BDashboardProps {
@@ -35,6 +37,7 @@ export const EnterpriseB2BDashboard: React.FC<EnterpriseB2BDashboardProps> = ({
   onOpenContractAgreement,
   onOpenNodeEscrowModal,
 }) => {
+  const { isAccessibleMode, speakText, isSpeaking, stopSpeaking } = useAccessibility();
   const [selectedContractId, setSelectedContractId] = useState<string>(contracts[0]?.id || 'cnt-1');
   const [filterType, setFilterType] = useState<string>('الكل');
 
@@ -249,19 +252,37 @@ export const EnterpriseB2BDashboard: React.FC<EnterpriseB2BDashboardProps> = ({
                   </div>
 
                   <div className="flex flex-col items-end gap-2">
-                    <div className="text-left font-mono">
-                      <span className="text-xs text-stone-400 block">سعر التوريد المتفق عليه</span>
-                      <span className="text-base font-black text-emerald-800">
-                        {activeContract.pricePerUnit.toLocaleString()} دج
-                        <span className="text-xs font-normal text-stone-600 mr-1">/ {activeContract.unit}</span>
-                      </span>
+                    <div className="text-left font-mono flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const totalVal = activeContract.totalContractedQuantity * activeContract.pricePerUnit;
+                          const escrowDeposit = Math.round(totalVal * 0.15);
+                          const speech = `عقد توريد سنوي رقم ${activeContract.contractNumber} مع ${activeContract.enterpriseName}. المحصول: ${activeContract.cropTitle}. إجمالي الحصة المتعاقد عليها: ${activeContract.totalContractedQuantity} ${activeContract.unit}. سعر التوريد: ${activeContract.pricePerUnit} دينار جزائري لكل ${activeContract.unit}. القيمة الإجمالية للعقد: ${totalVal} دينار جزائري. قيمة العربون المالي المودع في حساب الضمان المشفر إسكرو بنسبة 15 بالمائة هي ${escrowDeposit} دينار جزائري. دورية التوريد: ${activeContract.periodicDeliveryInterval}. تاريخ الشحنة القادمة: ${activeContract.nextDeliveryDate}. اشتراطات الجودة: ${activeContract.labRequirementSpec}.`;
+                          speakText(speech, `تفاصيل عقد ${activeContract.enterpriseName}`);
+                        }}
+                        className="p-1.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 transition flex items-center gap-1 text-[11px] font-bold"
+                        title="استماع صوتي لتفاصيل العقد والعربون والالتزامات المالية"
+                        aria-label={`استماع صوتي لتفاصيل العقد السنوي مع ${activeContract.enterpriseName} والعربون المالي`}
+                      >
+                        <Volume2 className="w-3.5 h-3.5 text-emerald-700" />
+                        <span className="hidden sm:inline">قراءة العقد</span>
+                      </button>
+                      <div>
+                        <span className="text-xs text-stone-400 block">سعر التوريد المتفق عليه</span>
+                        <span className="text-base font-black text-emerald-800" aria-label={`سعر التوريد ${activeContract.pricePerUnit} دينار جزائري لكل ${activeContract.unit}`}>
+                          {activeContract.pricePerUnit.toLocaleString()} دج
+                          <span className="text-xs font-normal text-stone-600 mr-1">/ {activeContract.unit}</span>
+                        </span>
+                      </div>
                     </div>
 
                     <button
                       onClick={() => onOpenContractAgreement?.(activeContract.contractNumber)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-[11px] font-bold transition active:scale-95"
+                      aria-label={`عرض وتحميل وثيقة العقد السنوي الموثقة رقم ${activeContract.contractNumber}`}
                     >
-                      <FileCheck2 className="w-3.5 h-3.5 text-emerald-700" />
+                      <FileCheck2 className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" />
                       <span>عرض وثيقة العقد الموثقة (PDF)</span>
                     </button>
                   </div>
@@ -344,17 +365,30 @@ export const EnterpriseB2BDashboard: React.FC<EnterpriseB2BDashboardProps> = ({
                           </span>
                         </div>
 
-                        {/* Tracking Status Badge */}
+                        {/* Tracking Status Badge & Audio Reader */}
                         <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const speech = `الشحنة رقم ${shipment.shipmentNumber}. تاريخ التسليم: ${shipment.deliveryDate}. الكمية: ${shipment.quantity} ${shipment.unit}. القيمة المالية: ${shipment.invoiceAmountDzd} دينار جزائري. حالة التتبع: ${shipment.trackingStatus}. الناقل: ${shipment.carrierName} بواسطة ${shipment.vehicleType}. حالة التحليل المخبري: ${shipment.labStatus}. ${shipment.labReportSummary}. يتم تحرير أموال هذه الشحنة من حساب الضمان إسكرو للمزرعة فقط بعد استيفاء المطابقة المخبرية وختم الاستلام.`;
+                              speakText(speech, `تفاصيل الشحنة ${shipment.shipmentNumber}`);
+                            }}
+                            className="p-1.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-800 transition"
+                            title="استماع صوتي لتفاصيل الشحنة والقيمة المالية وحالة الضمان"
+                            aria-label={`استماع صوتي لتفاصيل الشحنة ${shipment.shipmentNumber} وقيمتها المالية ${shipment.invoiceAmountDzd} دينار جزائري`}
+                          >
+                            <Volume2 className="w-3.5 h-3.5 text-emerald-800" />
+                          </button>
+
                           <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
                             shipment.trackingStatus === 'تم الفحص والاستلام'
                               ? 'bg-emerald-100 text-emerald-800'
                               : shipment.trackingStatus === 'في الطريق إلى المؤسسة'
                               ? 'bg-blue-100 text-blue-800 animate-pulse'
                               : 'bg-stone-100 text-stone-600'
-                          }`}>
-                            {shipment.trackingStatus === 'تم الفحص والاستلام' && <CheckCircle2 className="w-3.5 h-3.5" />}
-                            {shipment.trackingStatus === 'في الطريق إلى المؤسسة' && <Truck className="w-3.5 h-3.5" />}
+                          }`} aria-label={`حالة التتبع: ${shipment.trackingStatus}`}>
+                            {shipment.trackingStatus === 'تم الفحص والاستلام' && <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />}
+                            {shipment.trackingStatus === 'في الطريق إلى المؤسسة' && <Truck className="w-3.5 h-3.5" aria-hidden="true" />}
                             {shipment.trackingStatus}
                           </span>
                         </div>

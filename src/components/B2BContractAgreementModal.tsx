@@ -153,7 +153,7 @@ export const B2BContractAgreementModal: React.FC<B2BContractAgreementModalProps>
   onClose,
   initialContract
 }) => {
-  const { isVoiceEnabled, isEasyMode, speakText } = useAccessibility();
+  const { isAccessibleMode, speakText } = useAccessibility();
   const [contractData, setContractData] = useState<B2BContractModelData>({
     ...DEFAULT_B2B_CONTRACT,
     ...initialContract
@@ -445,9 +445,28 @@ export const B2BContractAgreementModal: React.FC<B2BContractAgreementModalProps>
               </section>
 
               {/* المادة 4: المعاملات المالية ونظام الضمان المشفر */}
-              <section className="space-y-3 bg-stone-50 p-4 sm:p-5 rounded-2xl border border-stone-200 text-xs">
-                <div className="bg-stone-900 text-white px-3 py-1.5 rounded-lg inline-block text-xs font-black">
-                  المادة 4: المعاملات المالية ونظام الضمان المشفر (Escrow System)
+              <section 
+                className="space-y-3 bg-stone-50 p-4 sm:p-5 rounded-2xl border border-stone-200 text-xs"
+                role="region"
+                aria-label="المادة الرابعة: المعاملات المالية ونظام الضمان المشفر إسكرو"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="bg-stone-900 text-white px-3 py-1.5 rounded-lg inline-block text-xs font-black">
+                    المادة 4: المعاملات المالية ونظام الضمان المشفر (Escrow System)
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const speech = `المادة الرابعة: المعاملات المالية ونظام الضمان المشفر إسكرو. أولاً: عربون تثبيت الجدية. عند توقيع العقد عبر المنصة، يودع الطرف الثاني عربوناً بنسبة 15 بالمائة من القيمة الإجمالية للطلب المجدول في حساب الضمان المشفر الخاص بالمنصة. ثانياً: الربط بالدفع الإلكتروني عبر بطاقة سي إي بي أو البطاقة الذهبية أو التحويل البنكي المعتمد. ثالثاً: آلية تحرير الأموال والضمان. لا يتم تحرير شريحة المبالغ المودعة للفلاح إلا بعد توقيع وصل الاستلام الإلكتروني من الطرف الثاني وإرفاق تقرير المطابقة المخبرية بنجاح الصادر عن معهد إنرا. وفي حال رفض الشحنة لعدم مطابقتها يُسترجع مبلغ العربون تلقائياً لحساب المؤسسة.`;
+                      speakText(speech, 'المادة 4: نظام الضمان المالي المشفر');
+                    }}
+                    className="p-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold transition flex items-center gap-1 text-[11px]"
+                    title="الاستماع لنص المادة 4 الخاصة بالعربون والضمان المالي"
+                    aria-label="الاستماع لنص المادة الرابعة الخاصة بنظام العربون والضمان المالي إسكرو"
+                  >
+                    <Volume2 className="w-3.5 h-3.5 text-amber-700" />
+                    <span>قراءة بنود العربون والضمان</span>
+                  </button>
                 </div>
 
                 <div className="space-y-2 text-stone-700 leading-relaxed">

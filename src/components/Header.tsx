@@ -137,10 +137,10 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Volume2 className={`w-4 h-4 ${isAccessibleMode ? 'text-stone-950 animate-bounce' : 'text-amber-600'}`} />
             <span className="hidden sm:inline">
-              {isAccessibleMode ? 'وضع القراءة الميسر (مفعّل)' : 'وضع القراءة الميسر'}
+              {isAccessibleMode ? 'القارئ الصوتي العربي 🇩🇿 (مفعّل)' : 'القارئ الصوتي العربي'}
             </span>
             <span className="sm:hidden">
-              {isAccessibleMode ? 'ميسر 🔊' : 'ميسر'}
+              {isAccessibleMode ? 'قارئ عربي 🇩🇿' : 'قارئ'}
             </span>
           </button>
 
